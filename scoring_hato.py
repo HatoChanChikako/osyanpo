@@ -1,13 +1,15 @@
 import streamlit as st
 from PIL import Image
 import os
+from dotenv import load_dotenv
 from google.cloud import vision
-import openai
+from openai import OpenAI
 from datetime import datetime
 
 # API設定
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/your/credentials.json"
-openai.api_key = "your-openai-api-key"
+load_dotenv()
+api_key = os.environ.get("API_KEY")
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./osyanpo-f210ffd2f0e0.json"
 
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
@@ -33,7 +35,7 @@ def score_with_gpt(theme, gcv_results):
     """GPT-4で画像の採点とフィードバックを生成"""
     prompt = f"""
     以下の画像分析結果に基づいて、テーマ「{theme}」への適合度を100点満点で採点し、
-    ユーザーのモチベーションが上がるポジティブなフィードバックメッセージも付けてください。
+    ユーザーのモチベーションが上がるポジティブなフィードバックを一文で付けてください。
     
     画像分析結果:
     ラベル: {', '.join([label.description for label in gcv_results.label_annotations])}
@@ -43,8 +45,10 @@ def score_with_gpt(theme, gcv_results):
     {{"score": 数値, "feedback": "メッセージ"}}
     """
     
-    response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+    client = OpenAI()
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "あなたは画像審査の専門家です。"},
             {"role": "user", "content": prompt}
@@ -67,10 +71,10 @@ def main():
     if uploaded_file:
         # 画像を表示
         image = Image.open(uploaded_file)
-        st.image(image, caption="アップロードされた画像", use_column_width=True)
+        st.image(image, caption="アップロードされた画像", use_container_width=True)
         
         # 判定ボタン
-        if st.button("判定する"):
+        if st.button("この写真を使う"):
             with st.spinner("AIが画像を分析中..."):
                 # Google Cloud Vision APIで分析
                 gcv_results = get_image_analysis(uploaded_file)
