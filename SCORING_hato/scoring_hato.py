@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import os
 from dotenv import load_dotenv
+from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import vision
 from openai import OpenAI
@@ -37,7 +38,7 @@ def score_with_gpt(theme, gcv_results):
     """GPT-4で画像の採点とフィードバックを生成"""
     prompt = f"""
     以下の画像分析結果に基づいて、テーマ「{theme}」への適合度を100点満点で採点し、
-    ユーザーのモチベーションが上がるポジティブなフィードバックを一文で付けてください。
+    ユーザーがさらに散歩をしながら写真を撮りたくなるような、モチベーションが上がるポジティブなフィードバックを一文で付けてください。
     
     画像分析結果:
     ラベル: {', '.join([label.description for label in gcv_results.label_annotations])}
@@ -52,7 +53,7 @@ def score_with_gpt(theme, gcv_results):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "あなたは画像審査の専門家です。"},
+            {"role": "system", "content": "あなたは写真審査の専門家です。"},
             {"role": "user", "content": prompt}
         ],
         response_format={ "type": "json_object" }
