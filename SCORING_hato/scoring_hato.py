@@ -12,18 +12,17 @@ import base64
 
 # API設定
 load_dotenv(find_dotenv())
-api_key = os.getenv["API_KEY"]
+api_key = os.getenv("API_KEY")
 
 #サービスアカウントキーの設定
-# get the value of `SERVICE_ACCOUNT_KEY`environment variable
+#環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
 encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
 
-# remove the first two chars and the last char in the key
+#不要な最初の2文字と最後の一文字を削除
 encoded_key = str(encoded_key)[2:-1]
-
-# decode
+#デコーディング
 original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
-
+#上記original_service_keyを
 credentials = service_account.Credentials.from_service_account_info(original_service_key)
 
 
@@ -52,6 +51,7 @@ def score_with_gpt(theme, gcv_results):
     prompt = f"""
     以下の画像分析結果に基づいて、テーマ「{theme}」への適合度を100点満点で採点し、
     ユーザーがさらに散歩をしながら写真を撮りたくなるような、モチベーションが上がるポジティブなフィードバックを一文で付けてください。
+    ユーザーが未就学児である可能性も考慮して、わかりやすい日本語で表現してください。
     
     画像分析結果:
     ラベル: {', '.join([label.description for label in gcv_results.label_annotations])}
