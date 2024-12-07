@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 import os
-#from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv, find_dotenv
 from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import vision
@@ -11,7 +11,7 @@ import json
 import base64
 
 # API設定
-#load_dotenv(find_dotenv())
+load_dotenv(find_dotenv())
 api_key = os.getenv["API_KEY"]
 
 #サービスアカウントキーの設定
