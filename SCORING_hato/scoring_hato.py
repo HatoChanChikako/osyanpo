@@ -10,8 +10,8 @@ from datetime import datetime
 
 # API設定
 load_dotenv()
-api_key = os.getenv("API_KEY")
-credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+api_key = os.environ["API_KEY"]
+credentials_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
 
 
 def get_image_analysis(image_file):
