@@ -1,22 +1,35 @@
 import streamlit as st
 from PIL import Image
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import vision
 from openai import OpenAI
 from datetime import datetime
+import json
+import base64
 
 # API設定
-load_dotenv()
+load_dotenv(find_dotenv())
 api_key = os.environ["API_KEY"]
-credentials_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+
+#サービスアカウントキーの設定
+# get the value of `SERVICE_ACCOUNT_KEY`environment variable
+encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
+
+# remove the first two chars and the last char in the key
+encoded_key = str(encoded_key)[2:-1]
+
+# decode
+original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
+
+credentials = service_account.Credentials.from_service_account_info(original_service_key)
 
 
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
-    client = vision.ImageAnnotatorClient()
+    client = vision.ImageAnnotatorClient(credentials=credentials)
     
     # 画像をバイト列に変換
     content = image_file.getvalue()

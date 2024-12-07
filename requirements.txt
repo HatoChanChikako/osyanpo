@@ -1,0 +1,6 @@
+streamlit
+Pillow
+python-dotenv
+google-cloud-storage
+google-cloud-vision
+openai
