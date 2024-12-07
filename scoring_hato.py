@@ -2,14 +2,16 @@ import streamlit as st
 from PIL import Image
 import os
 from dotenv import load_dotenv
+from google.oauth2 import service_account
 from google.cloud import vision
 from openai import OpenAI
 from datetime import datetime
 
 # API設定
 load_dotenv()
-api_key = os.environ.get("API_KEY")
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./osyanpo-f210ffd2f0e0.json"
+api_key = os.getenv("API_KEY")
+credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
 
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
