@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 import os
-from dotenv import load_dotenv, find_dotenv
+#from dotenv import load_dotenv, find_dotenv
 from google.cloud import storage
 from google.oauth2 import service_account
 from google.cloud import vision
