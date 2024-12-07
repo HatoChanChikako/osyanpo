@@ -12,11 +12,11 @@ import base64
 
 # API設定
 #load_dotenv(find_dotenv())
-api_key = os.environ["API_KEY"]
+api_key = os.getenv["API_KEY"]
 
 #サービスアカウントキーの設定
 # get the value of `SERVICE_ACCOUNT_KEY`environment variable
-encoded_key = os.environ("SERVICE_ACCOUNT_KEY")
+encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
 
 # remove the first two chars and the last char in the key
 encoded_key = str(encoded_key)[2:-1]
