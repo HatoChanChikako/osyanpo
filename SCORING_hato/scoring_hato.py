@@ -12,7 +12,7 @@ import base64
 
 # API設定
 load_dotenv(find_dotenv())
-api_key = os.getenv("API_KEY")
+os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 
 #サービスアカウントキーの設定
 #環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
@@ -60,10 +60,8 @@ def score_with_gpt(theme, gcv_results):
     回答は以下のJSON形式で返してください:
     {{"score": 数値, "feedback": "メッセージ"}}
     """
-    
-    
 
-    client = OpenAI(api_key=os.getenv("API_KEY"))
+    client = OpenAI()
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
