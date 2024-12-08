@@ -11,18 +11,18 @@ import json
 import base64
 
 # API設定
-load_dotenv(find_dotenv())
-os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+#load_dotenv(find_dotenv())
+#os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 #サービスアカウントキーの設定
-#環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
+##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
 encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
-
-#不要な最初の2文字と最後の一文字を削除
+##不要な最初の2文字と最後の一文字を削除
 encoded_key = str(encoded_key)[2:-1]
-#デコーディング
+##デコーディング
 original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
-#上記original_service_keyを
+##上記original_service_keyをcredentialsという変数に代入
 credentials = service_account.Credentials.from_service_account_info(original_service_key)
 
 
@@ -60,8 +60,6 @@ def score_with_gpt(theme, gcv_results):
     回答は以下のJSON形式で返してください:
     {{"score": 数値, "feedback": "メッセージ"}}
     """
-
-    client = OpenAI()
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
