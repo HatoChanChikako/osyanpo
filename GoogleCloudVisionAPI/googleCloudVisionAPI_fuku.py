@@ -10,7 +10,7 @@ import io
 
 
 # 環境変数の設定
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/fukushimanaoki/Downloads/osyanpo-app-service-account.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/osyanpo-app-service-account.json'
 
 def analyze_image():
     # Vision APIクライアントを初期化
