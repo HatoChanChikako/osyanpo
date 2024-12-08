@@ -14,8 +14,6 @@ import base64
 load_dotenv(find_dotenv())
 os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
 
-st.write(os.getenv("API_KEY"))
-
 #サービスアカウントキーの設定
 ##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
 encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
