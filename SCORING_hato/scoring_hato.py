@@ -61,10 +61,8 @@ def score_with_gpt(theme, gcv_results):
     {{"score": 数値, "feedback": "メッセージ"}}
     """
     
-    #client = OpenAI()
-    client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),  # This is the default and can be omitted
-)
+    client = OpenAI()
+
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
