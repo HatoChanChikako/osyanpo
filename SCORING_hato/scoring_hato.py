@@ -57,7 +57,6 @@ def score_with_gpt(theme, gcv_results):
     画像分析結果:
     ラベル: {', '.join([label.description for label in gcv_results.label_annotations])}
     検出オブジェクト: {', '.join([obj.name for obj in gcv_results.localized_object_annotations])}
-    ドミナントカラー: {', '.join([colors.name for color in gcv_results.localized_object_annotations])}
     
     回答は以下のJSON形式で返してください:
     {{"score": 数値, "feedback": "メッセージ"}}
