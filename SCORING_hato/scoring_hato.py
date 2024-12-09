@@ -12,7 +12,8 @@ import base64
 
 # API設定
 load_dotenv(find_dotenv())
-os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+#os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+API_KEY = st.secrets["API_KEY"]
 
 
 #サービスアカウントキーの設定
@@ -61,7 +62,7 @@ def score_with_gpt(theme, gcv_results):
     {{"score": 数値, "feedback": "メッセージ"}}
     """
     
-    client = OpenAI()
+    client = OpenAI(api_key=API_KEY)
 
 
     response = client.chat.completions.create(
