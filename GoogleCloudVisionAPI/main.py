@@ -7,26 +7,26 @@ import os
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = '/Users/osyanpo-app-service-account.json'
 
 # 画像解析結果をキャッシュする関数
-def analyze_image(image_content):
+def get_image_analysis(image_file):
+    """Google Cloud Vision APIで画像を分析"""
     # Vision APIクライアントを初期化
     client = vision.ImageAnnotatorClient()
 
-    # Vision APIで解析する画像を作成
-    image = vision.Image(content=image_content)
+    # 画像をバイト列に変換
+    content = image_file.getvalue()
+    image = vision.Image(content=content)
 
-    # ラベル検出
-    label_response = client.label_detection(image=image)
-    labels = label_response.label_annotations
-
-    # オブジェクト検出
-    object_response = client.object_localization(image=image)
-    objects = object_response.localized_object_annotations
-
-    # ドミナントカラーの検出
-    color_response = client.image_properties(image=image)
-    colors = color_response.image_properties_annotation.dominant_colors.colors
-
-    return labels, objects, colors
+    # 複数の分析を実行
+    response = client.annotate_image({
+        'image': image,
+        'features': [
+            {'type_': vision.Feature.Type.LABEL_DETECTION},
+            {'type_': vision.Feature.Type.OBJECT_LOCALIZATION},
+            {'type_': vision.Feature.Type.IMAGE_PROPERTIES},
+        ]
+    })
+    
+    return response
 
 # Streamlit UI
 st.title("Google Cloud Vision API Demo")
@@ -41,24 +41,36 @@ if uploaded_file is not None:
 
     # 「結果を表示する」ボタン
     if st.button("結果を表示する"):
-        # 画像データを読み込む
-        image_content = uploaded_file.read()
-
         # Vision APIで画像を解析
-        labels, objects, colors = analyze_image(image_content)
+        response = get_image_analysis(uploaded_file)
 
         # ラベルを表示
         st.subheader("Labels (ラベル)")
-        for label in labels:
-            st.write(f"{label.description} (confidence: {label.score:.2f})")
+        labels = response.label_annotations
+        if labels:
+            for label in labels:
+                st.write(f"{label.description} (confidence: {label.score:.2f})")
+        else:
+            st.write("ラベルが検出されませんでした。")
 
         # オブジェクトを表示
         st.subheader("Objects (オブジェクト)")
-        for obj in objects:
-            st.write(f"{obj.name} (confidence: {obj.score:.2f})")
+        objects = response.localized_object_annotations
+        if objects:
+            for obj in objects:
+                st.write(f"{obj.name} (confidence: {obj.score:.2f})")
+        else:
+            st.write("オブジェクトが検出されませんでした。")
 
         # 色を表示
         st.subheader("Dominant Colors (割合の多い色)")
-        for color_info in colors:
-            color = color_info.color
-            st.write(f"RGB: ({int(color.red)}, {int(color.green)}, {int(color.blue)}) (confidence: {color_info.pixel_fraction:.2f})")
+        colors = response.image_properties_annotation.dominant_colors.colors
+        if colors:
+            for color_info in colors:
+                color = color_info.color
+                st.write(
+                    f"RGB: ({int(color.red)}, {int(color.green)}, {int(color.blue)}) "
+                    f"(confidence: {color_info.pixel_fraction:.2f})"
+                )
+        else:
+            st.write("色の情報がありませんでした。")
