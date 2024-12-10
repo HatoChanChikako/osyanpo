@@ -17,14 +17,13 @@ API_KEY = st.secrets["API_KEY"] #Streamlit Cloudデプロイ用コード
 
 #サービスアカウントキーの設定（羽藤のGoogle Cloudサービスアカウントキーを使用）
 ##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
-encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
+encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"]
 ##不要な最初の2文字と最後の一文字を削除
 encoded_key = str(encoded_key)[2:-1]
 ##デコーディング
 original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
 ##上記original_service_keyをcredentialsという変数に代入
 credentials = service_account.Credentials.from_service_account_info(original_service_key)
-
 
 def topic_generation(level):
     #お題生成がうまくいかなかったので変更してみました　request_to_gpt→promt(by羽藤)
@@ -58,8 +57,8 @@ def topic_generation(level):
         messages=[
         {"role": "system", "content": "あなたは子供の成長を願う母親です。"},
         {'role': 'user', 'content': prompt }],
-        temperature=0.0  #デモ撮影用には0.0でよいが、ランダム性を上げるために、0.8ぐらいにしておく？ただ、1.0にしても同じお題が出てきた…(by羽藤)
-    )
+        temperature=1.0
+        )
     
     #応答
     result = response.choices[0].message.content
@@ -90,10 +89,10 @@ def get_image_analysis(image_file):
 
 
 
-def score_with_gpt(theme, gcv_results):
+def score_with_gpt(thema_data, gcv_results):
     """GPT-4で画像の採点とフィードバックを生成"""
     prompt = f"""
-    以下の画像分析結果に基づいて、テーマ「{theme}」への適合度を100点満点で採点し、
+    以下の画像分析結果に基づいて、テーマ「{thema_data}」への適合度を100点満点で採点し、
     ユーザーがさらに散歩をしながら写真を撮りたくなるような、モチベーションが上がるポジティブなフィードバックを一文で付けてください。
     ユーザーが未就学児である可能性も考慮して、わかりやすい日本語で表現してください。
     
@@ -125,6 +124,10 @@ def main():
 
     st.title("📷 お写んぽアプリ")
 
+    #セッション状態の初期化
+    if "thema_data" not in st.session_state:
+        st.session_state.thema_data = None
+
     # レベル選択
     level = st.selectbox(
     "レベルをえらんでね:",
@@ -137,9 +140,9 @@ def main():
     if st.button("おだい を GET"):
         with st.spinner("かんがえちゅう…📷"):
             try:
-                theme_data = topic_generation(level) #以下、ドイツ語thema→英語themeに修正(by羽藤)
-                if "Theme" in theme_data:
-                    st.success(f"きょう の おだい: **{theme_data['Theme']}**")
+                st.session_state.thema_data = topic_generation(level)
+                if "Thema" in st.session_state.thema_data:
+                    st.success(f"きょう の おだい: **{st.session_state.thema_data['Thema']}**")
                 else:
                     st.error("しっぱい！")
             except Exception as e:
@@ -156,12 +159,16 @@ def main():
         
         # 判定ボタン
         if st.button("この写真を使う"):
+            if st.session_state.thema_data is None:
+                st.error("先に、「おだい を GET」ボタンをおして おだい をみてね")
+                return
+            
             with st.spinner("AIが画像を分析中..."):
                 # Google Cloud Vision APIで分析
                 gcv_results = get_image_analysis(uploaded_file)
                 
                 # GPTで採点とフィードバック生成
-                result = eval(score_with_gpt(theme_data, gcv_results))
+                result = eval(score_with_gpt(st.session_state.thema_data["Thema"], gcv_results))
                 
                 # 結果表示
                 score = result['score']
