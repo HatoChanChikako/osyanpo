@@ -1,17 +1,35 @@
 import streamlit as st
 from PIL import Image
 import os
+from dotenv import load_dotenv, find_dotenv
+from google.cloud import storage
+from google.oauth2 import service_account
 from google.cloud import vision
-import openai
+from openai import OpenAI
 from datetime import datetime
+import json
+import base64
 
 # API設定
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "path/to/your/credentials.json"
-openai.api_key = "your-openai-api-key"
+#load_dotenv(find_dotenv())
+#os.environ["OPENAI_API_KEY"] = os.getenv("API_KEY")
+API_KEY = st.secrets["API_KEY"]
+
+
+#サービスアカウントキーの設定
+##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
+encoded_key = os.getenv("SERVICE_ACCOUNT_KEY")
+##不要な最初の2文字と最後の一文字を削除
+encoded_key = str(encoded_key)[2:-1]
+##デコーディング
+original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
+##上記original_service_keyをcredentialsという変数に代入
+credentials = service_account.Credentials.from_service_account_info(original_service_key)
+
 
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
-    client = vision.ImageAnnotatorClient()
+    client = vision.ImageAnnotatorClient(credentials=credentials)
     
     # 画像をバイト列に変換
     content = image_file.getvalue()
@@ -33,7 +51,8 @@ def score_with_gpt(theme, gcv_results):
     """GPT-4で画像の採点とフィードバックを生成"""
     prompt = f"""
     以下の画像分析結果に基づいて、テーマ「{theme}」への適合度を100点満点で採点し、
-    ユーザーのモチベーションが上がるポジティブなフィードバックメッセージも付けてください。
+    ユーザーがさらに散歩をしながら写真を撮りたくなるような、モチベーションが上がるポジティブなフィードバックを一文で付けてください。
+    ユーザーが未就学児である可能性も考慮して、わかりやすい日本語で表現してください。
     
     画像分析結果:
     ラベル: {', '.join([label.description for label in gcv_results.label_annotations])}
@@ -43,10 +62,13 @@ def score_with_gpt(theme, gcv_results):
     {{"score": 数値, "feedback": "メッセージ"}}
     """
     
-    response = openai.ChatCompletion.create(
-        model="gpt-4-turbo-preview",
+    client = OpenAI(api_key=API_KEY)
+
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "あなたは画像審査の専門家です。"},
+            {"role": "system", "content": "あなたは写真審査の専門家です。"},
             {"role": "user", "content": prompt}
         ],
         response_format={ "type": "json_object" }
@@ -67,10 +89,10 @@ def main():
     if uploaded_file:
         # 画像を表示
         image = Image.open(uploaded_file)
-        st.image(image, caption="アップロードされた画像", use_column_width=True)
+        st.image(image, caption="アップロードされた画像", use_container_width=True)
         
         # 判定ボタン
-        if st.button("判定する"):
+        if st.button("この写真を使う"):
             with st.spinner("AIが画像を分析中..."):
                 # Google Cloud Vision APIで分析
                 gcv_results = get_image_analysis(uploaded_file)
@@ -100,3 +122,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
