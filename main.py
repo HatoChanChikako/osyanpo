@@ -8,6 +8,7 @@ from openai import OpenAI
 from datetime import datetime
 import json
 import base64
+import io
 
 
 # API設定（羽藤のOpenai API Keyを使用）
@@ -67,14 +68,16 @@ def topic_generation(level):
 
 
 
+# 画像解析結果をキャッシュする関数
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
+    # Vision APIクライアントを初期化
     client = vision.ImageAnnotatorClient(credentials=credentials)
-    
+
     # 画像をバイト列に変換
     content = image_file.getvalue()
     image = vision.Image(content=content)
-    
+
     # 複数の分析を実行
     response = client.annotate_image({
         'image': image,
@@ -186,9 +189,40 @@ def main():
                 
                 # 分析詳細を折りたたみメニューで表示
                 with st.expander("AI分析の詳細"):
-                    st.write("検出されたラベル:")
-                    for label in gcv_results.label_annotations:
-                        st.text(f"- {label.description} ({label.score:.2%})")
+                    # ラベルを表示
+                    st.subheader("Labels (ラベル)")
+                    labels = gcv_results.label_annotations
+                    if labels:
+                        for label in labels:
+                            st.write(f"{label.description} (confidence: {label.score:.2f})")
+                    else:
+                        st.write("ラベルが検出されませんでした。")
+
+                    # オブジェクトを表示
+                    st.subheader("Objects (オブジェクト)")
+                    objects = gcv_results.localized_object_annotations
+                    if objects:
+                        for obj in objects:
+                            st.write(f"{obj.name} (confidence: {obj.score:.2f})")
+                    else:
+                        st.write("オブジェクトが検出されませんでした。")
+
+                    # 色を表示
+                    st.subheader("Dominant Colors (割合の多い色)")
+                    colors = gcv_results.image_properties_annotation.dominant_colors.colors
+                    if colors:
+                        for color_info in colors:
+                            color = color_info.color
+                            st.write(
+                                f"RGB: ({int(color.red)}, {int(color.green)}, {int(color.blue)}) "
+                                f"(confidence: {color_info.pixel_fraction:.2f})"
+                            )
+                    else:
+                        st.write("色の情報がありませんでした。")
+
+                    #st.write("検出されたラベル:")
+                    #for label in gcv_results.label_annotations:
+                    #    st.text(f"- {label.description} ({label.score:.2%})")
 
 if __name__ == "__main__":
     main()
