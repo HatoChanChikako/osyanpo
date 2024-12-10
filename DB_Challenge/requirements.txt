@@ -1,0 +1,7 @@
+streamlit
+google-cloud-vision
+Pillow
+requests
+sqlite3
+datetime
+Image
