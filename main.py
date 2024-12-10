@@ -12,49 +12,44 @@ import io
 
 
 # API設定（羽藤のOpenai API Keyを使用）
-load_dotenv(find_dotenv())  #ローカル環境用コード
-#API_KEY = os.getenv("API_KEY")  #ローカル環境用コード
-API_KEY = st.secrets["API_KEY"] #Streamlit Cloudデプロイ用コード
+load_dotenv(find_dotenv())
+API_KEY = st.secrets["API_KEY"]
 
 #サービスアカウントキーの設定（羽藤のGoogle Cloudサービスアカウントキーを使用）
-##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
-encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"]
-##不要な最初の2文字と最後の一文字を削除
-encoded_key = str(encoded_key)[2:-1]
-##デコーディング
-original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))
-##上記original_service_keyをcredentialsという変数に代入
-credentials = service_account.Credentials.from_service_account_info(original_service_key)
+encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"]                                           ##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
+encoded_key = str(encoded_key)[2:-1]                                                      ##不要な最初の2文字と最後の一文字を削除
+original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))           ##デコーディング
+credentials = service_account.Credentials.from_service_account_info(original_service_key) ##上記original_service_keyをcredentialsという変数に代入
+
+
 
 def topic_generation(level):
-    #お題生成がうまくいかなかったので変更してみました　request_to_gpt→promt(by羽藤)
     prompt = f"""
     以下の{level}の対象者が散歩中に撮影できる、シンプルなお題をランダムにひとつ生成してください。
 
     レベル1：
     対象者「未就学児」
     表示形式「ひらがな」
-    例「くるま/ねこ」
+    例「くるま」「ねこ」
 
     レベル2：
     対象者「小学生」
     表示形式「小学校で習う漢字のみ使用」
-    例「赤い車/黒い猫」
+    例「赤い車」「黒い猫」
 
     レベル3：
     対象者「中学生以上」
-    表示形式「英語」
-    例「緊急車両/首輪をつけた黒い猫」
+    表示形式「日本語」
+    例「緊急車両」「首輪をつけた黒い猫」
 
     回答は以下のJSON形式で返してください:
     {{"Thema": "生成されたお題"}}
 
     """
 
-    #以下、二行をOpenai API 1.0.0以上対応の記述に修正(by羽藤)
     client = OpenAI(api_key=API_KEY)
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  #モデルの選択要検討（一旦、安くて性能の高い小さなモデルを採用）(by羽藤)
+        model="gpt-4o-mini",
         messages=[
         {"role": "system", "content": "あなたは子供の成長を願う母親です。"},
         {'role': 'user', 'content': prompt }],
@@ -106,9 +101,8 @@ def score_with_gpt(thema_data, gcv_results):
     回答は以下のJSON形式で返してください:
     {{"score": 数値, "feedback": "メッセージ"}}
     """
-    
-    client = OpenAI(api_key=API_KEY)
 
+    client = OpenAI(api_key=API_KEY)
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",  #モデルの選択要検討（一旦、安くて性能の高い小さなモデルを採用）(by羽藤)
