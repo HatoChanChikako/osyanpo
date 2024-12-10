@@ -12,8 +12,8 @@ import base64
 
 # API設定（羽藤のOpenai API Keyを使用）
 load_dotenv(find_dotenv())  #ローカル環境用コード
-API_KEY = os.getenv("API_KEY")  #ローカル環境用コード
-#API_KEY = st.secrets["API_KEY"] #Streamlit Cloudデプロイ用コード
+#API_KEY = os.getenv("API_KEY")  #ローカル環境用コード
+API_KEY = st.secrets["API_KEY"] #Streamlit Cloudデプロイ用コード
 
 #サービスアカウントキーの設定（羽藤のGoogle Cloudサービスアカウントキーを使用）
 ##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
