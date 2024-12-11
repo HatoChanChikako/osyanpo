@@ -118,49 +118,126 @@ def score_with_gpt(thema_data, gcv_results):
 
 
 def main():
+    # CSSスタイルの追加
+    st.markdown(
+        """       
+        <style>
 
-    st.title("📷 お写んぽアプリ")
+        body {
+            background-color: darkslategray;   /* アプリ全体の背景色を薄い水色（#e0ffff）に設定 */
+        }
+        [data-testid="stAppViewContainer"] {
+            background-color: darkslategray;   /* Streamlitのメインコンテナの背景色も同じ薄い水色に設定 */
+        }
+        [data-testid="stHeader"] {
+            background: rgba(0, 0, 0, 0); /*Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）*/
+        }
+       .custom-title {
+            font-size: 2.5rem;               /* フォントサイズを2.5倍に */
+            font-family: Arial, sans-serif;  /* フォントをArialに、なければsans-serif */
+            color: #e0ffff !important;         /* 文字色を青緑色に */
+            text-align: center;              /* 文字を中央揃えに */
+        }
+        .custom-subtitle {
+            font-size: 1.5rem;                 /* 標準サイズのフォント */
+            color: #e0ffff !important;       /* 文字色を暗めのグレーに */
+            text-align: center;              /* 文字を中央揃えに */
+            margin-top: -10px;               /* 上の余白を-10px（上の要素に近づける） */
+        }
+        .custom-bold {
+            font-weight: bold;               /* 文字を太字に */
+            font-size: 1.2rem;               /* フォントサイズを1.5倍に */
+            margin-bottom: 10px;             /* 下に10pxの余白 */
+        }
+        .custom-list {
+            line-height: 1.4;                /* 行の高さを1.4倍に */
+            padding-left: 20px;              /* 左側に20pxの余白 */
+        }
+        footer {
+            text-align: center;              /* フッターのテキストを中央揃え */
+            margin-top: 2rem;                /* 上に2remの余白 */
+            font-size: 0.8rem;               /* フォントサイズを0.8倍に */
+            color: gray !important;          /* 文字色をグレーに */
+        }
+        /* タブを中央揃えにする */
+        div[data-testid="stHorizontalBlock"] {
+            display: flex;                   /* フレックスボックスレイアウトを使用 */
+            justify-content: center;         /* 中央揃えに */
+        }
+        /* タブの選択時の色を変更 */
+        div[data-testid="stHorizontalBlock"] button:focus {
+            background-color: #20b2aa;       /* 選択時の背景色を青緑に */
+            color: red !important;           /* 文字色を赤に（強制的に）*/
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # タイトル
+    st.markdown('<h1 class="custom-title">お写んぽアプリ</h1>', unsafe_allow_html=True)
+
+    # 画像のパスを設定
+    image_path = os.path.join("img", "walking_man.png")
+
+    # タブを作成
+    tab1, tab2, tab3 = st.tabs(["トップ", "使い方", "お問い合わせ"])
+
 
     #セッション状態の初期化
     if "thema_data" not in st.session_state:
         st.session_state.thema_data = None
 
-    # レベル選択
-    level = st.selectbox(
-    "レベルをえらんでね:",
-    ["レベル1", "レベル2", "レベル3"],
-    help="対象者のレベルを選択してください"
-    )
+
+    # Topタブの内容
+    with tab1:
+        st.markdown('<h2 class="custom-subtitle">さあ、探しに出かけよう！</h2>', unsafe_allow_html=True)
+        st.markdown('<p class="custom-subtitle">あなたが気付いていない新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
+
+        # Walking man 画像を表示
+        if os.path.exists(image_path):
+            st.image(image_path, use_container_width=True)
+
+        else:
+            st.error("画像が見つかりません。ファイルパスを確認してください。")
+
+        # レベル選択
+        level = st.selectbox(
+        label="レベルをえらんでね",
+        options= ["レベル1", "レベル2", "レベル3"],
+        help='<p class="custom-bold">対象者のレベルを選択してください</p>',
+        )
 
 
-    # ボタンクリックでお題を生成
-    if st.button("おだい を GET"):
-        with st.spinner("かんがえちゅう…📷"):
-            try:
-                st.session_state.thema_data = topic_generation(level)
-                if "Thema" in st.session_state.thema_data:
-                    st.success(f"きょう の おだい: **{st.session_state.thema_data['Thema']}**")
-                else:
-                    st.error("しっぱい！")
-            except Exception as e:
-                st.error(f"エラーがはっせい！: {str(e)}")
+        # ボタンクリックでお題を生成
+        if st.button("おだいをGET"):
+            with st.spinner("かんがえちゅう…📷"):
+                try:
+                    st.session_state.thema_data = topic_generation(level)
+                    if "Thema" in st.session_state.thema_data:
+                        st.success(f"きょう の おだい: **{st.session_state.thema_data['Thema']}**")
+                    else:
+                        st.error("しっぱい！")
+                except Exception as e:
+                    st.error(f"エラーがはっせい！: {str(e)}")
 
     
-    # ファイルアップロード
-    uploaded_file = st.file_uploader("画像をアップロードしてください", type=['jpg', 'jpeg', 'png'])
+        # ファイルアップロード
+        uploaded_file = st.file_uploader("画像をアップロードしてください", type=['jpg', 'jpeg', 'png'])
     
-    if uploaded_file:
-        # 画像を表示
-        image = Image.open(uploaded_file)
-        st.image(image, caption="アップロードされた画像", use_container_width=True)
+        if uploaded_file:
+            # 画像を表示
+            image = Image.open(uploaded_file)
+            st.image(image, caption="アップロードされた画像", use_container_width=True)
         
         # 判定ボタン
-        if st.button("この写真を使う"):
+        if st.button("この写真でOK"):
             if st.session_state.thema_data is None:
-                st.error("先に、「おだい を GET」ボタンをおして おだい をみてね")
+                st.error("先に、「おだいをGET」ボタンをおして おだい をみてね")
                 return
             
-            with st.spinner("AIが画像を分析中..."):
+            with st.spinner("AIがしゃしんをかくにんちゅう..."):
                 # Google Cloud Vision APIで分析
                 gcv_results = get_image_analysis(uploaded_file)
                 
@@ -217,6 +294,61 @@ def main():
                     #st.write("検出されたラベル:")
                     #for label in gcv_results.label_annotations:
                     #    st.text(f"- {label.description} ({label.score:.2%})")
+
+
+    # 使い方タブの内容
+    with tab2:
+        st.markdown('<p class="custom-bold">使い方</p>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <ul class="custom-list">
+            <li>1. お題を決定！  </li>
+            <li>2. お写んぽへ出発！  </li>
+            <li>3. お題を探して、写真を撮ろう！ </li>  
+            <li>4. 写真をアップして写真と一致したら、お写んぽ成功！ </li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # もちもの
+        st.markdown('<p class="custom-bold">もちもの</p>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <ul class="custom-list">
+                <li>お写んぽアプリが入ったスマホ</li>
+                <li>新しい発見を見つけるための好奇心</li>
+            </ul>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    # お問い合わせタブの内容
+    with tab3:
+        st.markdown('<p class="custom-bold">お問い合わせ</p>', unsafe_allow_html=True)
+        st.markdown("以下のフォームに必要事項を記入してください。")
+        with st.form("contact_form"):
+            name = st.text_input("名前", "")
+            email = st.text_input("メールアドレス", "")
+            message = st.text_area("メッセージ", "")
+            submitted = st.form_submit_button("送信")
+            if submitted:
+                if not name or not email:
+                    st.error("名前とメールアドレスは必須項目です。")
+                else:
+                    st.success(f"{name} さん、お問い合わせありがとうございます！")
+
+    # フッター
+    st.markdown(
+        """
+        <footer>
+        © 2024 うなぎのぼり～ず
+        </footer>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 if __name__ == "__main__":
     main()
