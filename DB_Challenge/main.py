@@ -3,6 +3,7 @@ import sqlite3
 from PIL import Image
 import io
 from datetime import datetime
+import pytz
 
 # ユーザー認証情報
 USERS = {
@@ -61,11 +62,14 @@ if st.session_state["authenticated"]:
         image_binary = buf.getvalue()
 
         # 現在の日時を取得
-        current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        current_utc_time = datetime.now(pytz.utc)
+        jst = pytz.timezone('Asia/Tokyo')
+        current_jst_time = current_utc_time.astimezone(jst)
+        formatted_jst_time = current_jst_time.strftime("%Y-%m-%d %H:%M")
 
         # データベースに保存
         c.execute("INSERT INTO images (user, data, date) VALUES (?, ?, ?)",
-                  (st.session_state["authenticated"], image_binary, current_date))
+                  (st.session_state["authenticated"], image_binary, current_jst_time))
         conn.commit()
         st.success("画像がアップロードされました！")
 
@@ -77,6 +81,7 @@ if st.session_state["authenticated"]:
     images = fetch_images(st.session_state["authenticated"])
 
     for img_data, date in images:
+        formatted_date = datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M")
         col1, col2 = st.columns([1, 1])
         with col1:
             st.write(f"日付: {date}")
