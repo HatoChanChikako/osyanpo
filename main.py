@@ -206,7 +206,7 @@ def main():
         level = st.selectbox(
         label="レベルをえらんでね",
         options= ["レベル1", "レベル2", "レベル3"],
-        help='<p class="custom-bold">対象者のレベルを選択してください</p>',
+        help='このアプリを使う人のレベルを選択してください',
         )
 
 
@@ -216,7 +216,7 @@ def main():
                 try:
                     st.session_state.thema_data = topic_generation(level)
                     if "Thema" in st.session_state.thema_data:
-                        st.success(f"きょう の おだい: **{st.session_state.thema_data['Thema']}**")
+                        st.success(f"きょうのおだい: **{st.session_state.thema_data['Thema']}**")
                     else:
                         st.error("しっぱい！")
                 except Exception as e:
@@ -224,20 +224,20 @@ def main():
 
     
         # ファイルアップロード
-        uploaded_file = st.file_uploader("画像をアップロードしてください", type=['jpg', 'jpeg', 'png'])
+        uploaded_file = st.file_uploader("写真をアップロードしてね", type=['jpg', 'jpeg', 'png'])
     
         if uploaded_file:
             # 画像を表示
             image = Image.open(uploaded_file)
-            st.image(image, caption="アップロードされた画像", use_container_width=True)
+            st.image(image, caption="アップロードした写真", use_container_width=True)
         
         # 判定ボタン
         if st.button("この写真でOK"):
             if st.session_state.thema_data is None:
-                st.error("先に、「おだいをGET」ボタンをおして おだい をみてね")
+                st.error("先に「おだいをGET」ボタンをおしておだいをみてね")
                 return
             
-            with st.spinner("AIがしゃしんをかくにんちゅう..."):
+            with st.spinner("AIが写真をかくにんちゅう..."):
                 # Google Cloud Vision APIで分析
                 gcv_results = get_image_analysis(uploaded_file)
                 
@@ -261,7 +261,7 @@ def main():
                 # 分析詳細を折りたたみメニューで表示
                 with st.expander("AI分析の詳細"):
                     # ラベルを表示
-                    st.subheader("Labels (ラベル)")
+                    st.write("Labels (ラベル)")
                     labels = gcv_results.label_annotations
                     if labels:
                         for label in labels:
@@ -270,7 +270,7 @@ def main():
                         st.write("ラベルが検出されませんでした。")
 
                     # オブジェクトを表示
-                    st.subheader("Objects (オブジェクト)")
+                    st.write("Objects (オブジェクト)")
                     objects = gcv_results.localized_object_annotations
                     if objects:
                         for obj in objects:
@@ -279,7 +279,7 @@ def main():
                         st.write("オブジェクトが検出されませんでした。")
 
                     # 色を表示
-                    st.subheader("Dominant Colors (割合の多い色)")
+                    st.write("Dominant Colors (割合の多い色)")
                     colors = gcv_results.image_properties_annotation.dominant_colors.colors
                     if colors:
                         for color_info in colors:
@@ -302,17 +302,17 @@ def main():
         st.markdown(
             """
             <ul class="custom-list">
-            <li>1. お題を決定！  </li>
+            <li>1. おだいをGET！  </li>
             <li>2. お写んぽへ出発！  </li>
-            <li>3. お題を探して、写真を撮ろう！ </li>  
-            <li>4. 写真をアップして写真と一致したら、お写んぽ成功！ </li>
+            <li>3. おだいを探して、写真をとろう！ </li>  
+            <li>4. おだいと同じ写真をアップロードできたら、お写んぽ成功！ </li>
             </ul>
             """,
             unsafe_allow_html=True
         )
 
         # もちもの
-        st.markdown('<p class="custom-bold">もちもの</p>', unsafe_allow_html=True)
+        st.markdown('<p class="custom-bold">持ち物</p>', unsafe_allow_html=True)
         st.markdown(
             """
             <ul class="custom-list">
@@ -327,7 +327,7 @@ def main():
     # お問い合わせタブの内容
     with tab3:
         st.markdown('<p class="custom-bold">お問い合わせ</p>', unsafe_allow_html=True)
-        st.markdown("以下のフォームに必要事項を記入してください。")
+        st.markdown("以下のフォームに記入してください。")
         with st.form("contact_form"):
             name = st.text_input("名前", "")
             email = st.text_input("メールアドレス", "")
@@ -335,7 +335,7 @@ def main():
             submitted = st.form_submit_button("送信")
             if submitted:
                 if not name or not email:
-                    st.error("名前とメールアドレスは必須項目です。")
+                    st.error("名前とメールアドレスは必ず書いてください。")
                 else:
                     st.success(f"{name} さん、お問い合わせありがとうございます！")
 
