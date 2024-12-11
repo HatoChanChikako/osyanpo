@@ -4,6 +4,14 @@ from PIL import Image
 import io
 from datetime import datetime
 
+# ユーザー認証情報
+USERS = {
+    "hato": "hato",
+    "fuku": "fuku",
+    "ito": "ito",
+    "kasa": "kasa"
+}
+
 # データベース接続
 conn = sqlite3.connect('image_album.db')
 c = conn.cursor()
@@ -14,50 +22,67 @@ c.execute('''CREATE TABLE IF NOT EXISTS images
               data BLOB,
               date TEXT)''')
 
-# 最終更新時刻を取得する関数
-def get_last_update_time():
-    c.execute("SELECT MAX(date) FROM images")
-    return c.fetchone()[0]
+# テーブルに 'user' カラムがない場合は追加
+try:
+    c.execute("ALTER TABLE images ADD COLUMN user TEXT")
+except sqlite3.OperationalError:
+    pass  # 'user' カラムが既に存在している場合はスキップ
 
-# 画像のアップロードと保存
-uploaded_file = st.file_uploader("画像をアップロードしてください", type=["png", "jpg", "jpeg"])
-if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    buf = io.BytesIO()
-    image.save(buf, format='PNG')
-    image_binary = buf.getvalue()
+# ログイン機能
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = None
+
+if not st.session_state["authenticated"]:
+    # ログインフォーム
+    st.title("ログイン")
+    username = st.text_input("ユーザー名")
+    password = st.text_input("パスワード", type="password")
     
-    # 現在の日時を取得
-    current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # データベースに保存
-    c.execute("INSERT INTO images (data, date) VALUES (?, ?)",
-              (image_binary, current_date))
-    conn.commit()
-    st.success("画像がアップロードされました！")
+    if st.button("ログイン"):
+        if username in USERS and USERS[username] == password:
+            st.session_state["authenticated"] = username
+            st.success(f"やっほー！、{username} さん！")
+            st.rerun()  # ログイン成功後、再描画
+        else:
+            st.error("ユーザー名またはパスワードが間違っています")
+    st.stop()  # ログイン前は止めておく
 
-# アルバムの表示
-st.title("お写んぽ思い出")
+# ログイン後の処理
+if st.session_state["authenticated"]:
+    st.title("お写んぽ思い出")
+    st.write(f"現在ログイン中のユーザー: {st.session_state['authenticated']}")
 
-@st.cache_data
-def fetch_images(_last_update):
-    c.execute("SELECT data, date FROM images ORDER BY date DESC")
-    return c.fetchall()
+    # 画像アップロード、表示の処理を記載
+    uploaded_file = st.file_uploader("画像をアップロードしてください", type=["png", "jpg", "jpeg"])
+    if uploaded_file is not None:
+        image = Image.open(uploaded_file)
+        buf = io.BytesIO()
+        image.save(buf, format='PNG')
+        image_binary = buf.getvalue()
 
-# 最終更新時刻を取得
-last_update = get_last_update_time()
+        # 現在の日時を取得
+        current_date = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-# データベースから画像を取得
-images = fetch_images(last_update)
+        # データベースに保存
+        c.execute("INSERT INTO images (user, data, date) VALUES (?, ?, ?)",
+                  (st.session_state["authenticated"], image_binary, current_date))
+        conn.commit()
+        st.success("画像がアップロードされました！")
 
-# 画像を表示
-for img_data, date in images:
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.write(f"日付: {date}")
-    with col2:
-        image = Image.open(io.BytesIO(img_data))
-        st.image(image, use_container_width=True)
-    st.divider()
+    # アルバムの表示
+    def fetch_images(user):
+        c.execute("SELECT data, date FROM images WHERE user = ? ORDER BY date DESC", (user,))
+        return c.fetchall()
+
+    images = fetch_images(st.session_state["authenticated"])
+
+    for img_data, date in images:
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.write(f"日付: {date}")
+        with col2:
+            image = Image.open(io.BytesIO(img_data))
+            st.image(image, use_container_width=True)
+        st.divider()
 
 conn.close()
