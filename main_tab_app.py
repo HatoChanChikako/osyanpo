@@ -11,49 +11,50 @@ st.markdown(
     [data-testid="stAppViewContainer"] {
         background-color: #e0ffff;   /* Streamlitのメインコンテナの背景色も同じ薄い水色に設定 */
     }
-    Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）
     [data-testid="stHeader"] {
-        background: rgba(0, 0, 0, 0);
+        background: rgba(0, 0, 0, 0); /*Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）*/
     }
     .custom-title {
-        font-size: 2.5rem;          /* フォントサイズを2.5倍に */
-        font-family: Arial, sans-serif;  // フォントをArialに、なければsans-serif */
-        color: #20b2aa !important;             /* 文字色を青緑色に */
-        text-align: center;         /* 文字を中央揃えに */
+        font-size: 2.5rem;               /* フォントサイズを2.5倍に */
+        font-family: Arial, sans-serif;  /* フォントをArialに、なければsans-serif */
+        color: #20b2aa !important;         /* 文字色を青緑色に */
+        text-align: center;              /* 文字を中央揃えに */
     }
     .custom-subtitle {
-        font-size: 1rem;           /* 標準サイズのフォント */
-        color: #333333 !important;            /* 文字色を暗めのグレーに */
-        text-align: center;        /* 文字を中央揃えに */
-        margin-top: -10px;         /* 上の余白を-10px（上の要素に近づける） */
+        font-size: 1rem;                 /* 標準サイズのフォント */
+        color: #333333 !important;       /* 文字色を暗めのグレーに */
+        text-align: center;              /* 文字を中央揃えに */
+        margin-top: -10px;               /* 上の余白を-10px（上の要素に近づける） */
     }
     .custom-bold {
-        font-weight: bold;         /* 文字を太字に */
-        font-size: 1.2rem;         /* フォントサイズを1.2倍に */
-        margin-bottom: 10px;       /* 下に10pxの余白 */
+        font-weight: bold;               /* 文字を太字に */
+        font-size: 1.2rem;               /* フォントサイズを1.2倍に */
+        margin-bottom: 10px;             /* 下に10pxの余白 */
+        color: black !important;         /* 通常時の文字色を黒に（強制的に）*/
     }
     .custom-list {
-        line-height: 1.4;          /* 行の高さを1.4倍に */
-        padding-left: 20px;        /* 左側に20pxの余白 */
+        line-height: 1.4;                /* 行の高さを1.4倍に */
+        padding-left: 20px;              /* 左側に20pxの余白 */
+        color: black !important;         /* 通常時の文字色を黒に（強制的に）*/
     }
     footer {
-        text-align: center;        /* フッターのテキストを中央揃え */
-        margin-top: 2rem;          /* 上に2remの余白 */
-        font-size: 0.8rem;         /* フォントサイズを0.8倍に */
-        color: gray;               /* 文字色をグレーに */
+        text-align: center;              /* フッターのテキストを中央揃え */
+        margin-top: 2rem;                /* 上に2remの余白 */
+        font-size: 0.8rem;               /* フォントサイズを0.8倍に */
+        color: gray !important;          /* 文字色をグレーに */
     }
     /* タブを中央揃えにする */
     div[data-testid="stHorizontalBlock"] {
-        display: flex;             /* フレックスボックスレイアウトを使用 */
-        justify-content: center;   /* 中央揃えに */
+        display: flex;                   /* フレックスボックスレイアウトを使用 */
+        justify-content: center;         /* 中央揃えに */
     }
     /* タブの選択時の色を変更 */
     div[data-testid="stHorizontalBlock"] button:focus {
-        background-color: #20b2aa;  /* 選択時の背景色を青緑に */
-        color: red !important;      /* 文字色を赤に（強制的に）*/
+        background-color: #20b2aa;       /* 選択時の背景色を青緑に */
+        color: red !important;           /* 文字色を赤に（強制的に）*/
     }
     div[data-testid="stHorizontalBlock"] button {
-        color: black !important;    /* 通常時の文字色を黒に（強制的に）*/
+        color: black !important;         /* 通常時の文字色を黒に（強制的に）*/
     }
     </style>
     """,
@@ -67,7 +68,8 @@ st.markdown('<h1 class="custom-title">お写んぽアプリ</h1>', unsafe_allow_
 image_path = os.path.join("img", "walking_man.png")
 
 # タブを作成
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Top", "使い方", "お題を決める", "撮影＆アップ", "お問い合わせ"])
+tab1, tab2, tab3, tab4 = st.tabs(["トップ", "つかいかた", "きろく", "お問い合わせ"])
+
 
 # Topタブの内容
 with tab1:
@@ -81,34 +83,7 @@ with tab1:
     else:
         st.error("画像が見つかりません。ファイルパスを確認してください。")
 
-# 使い方タブの内容
-with tab2:
-    st.markdown('<p class="custom-bold">使い方</p>', unsafe_allow_html=True)
-    st.markdown(
-        """
-        1. お題を決定！ 
-        2. お写んぽへ出発！  
-        3. お題を探して、写真を撮ろう！  
-        4. 写真をアップして写真と一致したら、お写んぽ成功！  
-        """,
-        unsafe_allow_html=True
-    )
-
-    # もちもの
-    st.markdown('<p class="custom-bold">もちもの</p>', unsafe_allow_html=True)
-    st.markdown(
-        """
-        <ul class="custom-list">
-            <li>お写んぽアプリが入ったスマホ</li>
-            <li>新しい発見を見つけるための好奇心</li>
-        </ul>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# お題を決めるタブの内容
-with tab3:
+  
     st.markdown('<p class="custom-bold">お題を決めよう！</p>', unsafe_allow_html=True)
     st.markdown(
         """
@@ -128,10 +103,7 @@ with tab3:
         st.session_state.selected_topic = selected_topic  # 選んだお題をセッション状態に保存
         st.success(f"お題: {selected_topic}")
 
-
-
-# 撮影＆アップタブの内容
-with tab4:
+    # 写真アップロード   
     st.markdown('<p class="custom-bold">撮影＆アップロード！</p>', unsafe_allow_html=True)
     st.markdown("以下の写真アップロード機能を使用して、お写んぽで撮影した写真を共有してください。")
 
@@ -158,9 +130,36 @@ with tab4:
         st.info("アップロードする写真を選択してください。")
 
 
+# 使い方タブの内容
+with tab2:
+    st.markdown('<p class="custom-bold">使い方</p>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <ul class="custom-list">
+        <li>1. お題を決定！  </li>
+        <li>2. お写んぽへ出発！  </li>
+        <li>3. お題を探して、写真を撮ろう！ </li>  
+        <li>4. 写真をアップして写真と一致したら、お写んぽ成功！ </li>
+        </ul>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # もちもの
+    st.markdown('<p class="custom-bold">もちもの</p>', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <ul class="custom-list">
+            <li>お写んぽアプリが入ったスマホ</li>
+            <li>新しい発見を見つけるための好奇心</li>
+        </ul>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 # お問い合わせタブの内容
-with tab5:
+with tab3:
     st.markdown('<p class="custom-bold">お問い合わせ</p>', unsafe_allow_html=True)
     st.markdown("以下のフォームに必要事項を記入してください。")
     with st.form("contact_form"):
