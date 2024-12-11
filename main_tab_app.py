@@ -6,53 +6,54 @@ st.markdown(
     """
     <style>
     body {
-        background-color: #e0ffff;
+        background-color: #e0ffff;   /* アプリ全体の背景色を薄い水色（#e0ffff）に設定 */
     }
     [data-testid="stAppViewContainer"] {
-        background-color: #e0ffff;
+        background-color: #e0ffff;   /* Streamlitのメインコンテナの背景色も同じ薄い水色に設定 */
     }
+    Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）
     [data-testid="stHeader"] {
         background: rgba(0, 0, 0, 0);
     }
     .custom-title {
-        font-size: 2.5rem;
-        font-family: Arial, sans-serif;
-        color: #20b2aa;
-        text-align: center;
+        font-size: 2.5rem;          /* フォントサイズを2.5倍に */
+        font-family: Arial, sans-serif;  // フォントをArialに、なければsans-serif */
+        color: #20b2aa !important;             /* 文字色を青緑色に */
+        text-align: center;         /* 文字を中央揃えに */
     }
     .custom-subtitle {
-        font-size: 1rem;
-        color: #333333;
-        text-align: center;
-        margin-top: -10px;
+        font-size: 1rem;           /* 標準サイズのフォント */
+        color: #333333 !important;            /* 文字色を暗めのグレーに */
+        text-align: center;        /* 文字を中央揃えに */
+        margin-top: -10px;         /* 上の余白を-10px（上の要素に近づける） */
     }
     .custom-bold {
-        font-weight: bold;
-        font-size: 1.2rem;
-        margin-bottom: 10px;
+        font-weight: bold;         /* 文字を太字に */
+        font-size: 1.2rem;         /* フォントサイズを1.2倍に */
+        margin-bottom: 10px;       /* 下に10pxの余白 */
     }
     .custom-list {
-        line-height: 1.4;
-        padding-left: 20px;
+        line-height: 1.4;          /* 行の高さを1.4倍に */
+        padding-left: 20px;        /* 左側に20pxの余白 */
     }
     footer {
-        text-align: center;
-        margin-top: 2rem;
-        font-size: 0.8rem;
-        color: gray;
+        text-align: center;        /* フッターのテキストを中央揃え */
+        margin-top: 2rem;          /* 上に2remの余白 */
+        font-size: 0.8rem;         /* フォントサイズを0.8倍に */
+        color: gray;               /* 文字色をグレーに */
     }
     /* タブを中央揃えにする */
     div[data-testid="stHorizontalBlock"] {
-        display: flex;
-        justify-content: center;
+        display: flex;             /* フレックスボックスレイアウトを使用 */
+        justify-content: center;   /* 中央揃えに */
     }
     /* タブの選択時の色を変更 */
     div[data-testid="stHorizontalBlock"] button:focus {
-        background-color: #20b2aa;
-        color: red !important; /* 選択時は赤 */
+        background-color: #20b2aa;  /* 選択時の背景色を青緑に */
+        color: red !important;      /* 文字色を赤に（強制的に）*/
     }
     div[data-testid="stHorizontalBlock"] button {
-        color: black !important;  /* 通常時は黒 */
+        color: black !important;    /* 通常時の文字色を黒に（強制的に）*/
     }
     </style>
     """,
