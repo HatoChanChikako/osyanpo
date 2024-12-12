@@ -9,20 +9,34 @@ from datetime import datetime
 import json
 import base64
 import io
+import sqlite3
+from datetime import datetime
+import pytz
 
+
+#-----------------------------------------------------------------
+#環境変数の設定
+#-----------------------------------------------------------------
 
 # API設定（羽藤のOpenai API Keyを使用）
 load_dotenv(find_dotenv())
 API_KEY = st.secrets["API_KEY"]
 
 #サービスアカウントキーの設定（羽藤のGoogle Cloudサービスアカウントキーを使用）
-encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"]                                           ##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
-encoded_key = str(encoded_key)[2:-1]                                                      ##不要な最初の2文字と最後の一文字を削除
-original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))           ##デコーディング
-credentials = service_account.Credentials.from_service_account_info(original_service_key) ##上記original_service_keyをcredentialsという変数に代入
+##環境変数から"SERVICE_ACCOUNT_KEY"という名前の値を取得
+encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"] 
+##不要な最初の2文字と最後の一文字を削除                                          
+encoded_key = str(encoded_key)[2:-1]        
+##TOML形式をJSON形式に変換                                            
+original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8')) 
+##上記original_service_keyをcredentialsという変数に代入          
+credentials = service_account.Credentials.from_service_account_info(original_service_key) 
 
+#-----------------------------------------------------------------
+#定義された関数群
+#-----------------------------------------------------------------
 
-
+#お題を生成する関数
 def topic_generation(level):
     prompt = f"""
     以下の{level}の対象者が散歩中に撮影できる、シンプルなお題をランダムにひとつ生成してください。
@@ -46,28 +60,25 @@ def topic_generation(level):
     {{"Thema": "生成されたお題"}}
 
     """
-
-    client = OpenAI(api_key=API_KEY)
-    response = client.chat.completions.create(
+    #OpenAIの機能を呼び出す
+    client = OpenAI(api_key=API_KEY)                                 
+    response = client.chat.completions.create(                       #生成されたお題をJSON形式の文字列からPythonの辞書に変換
         model="gpt-4o-mini",
         messages=[
         {"role": "system", "content": "あなたは子供の成長を願う母親です。"},
         {'role': 'user', 'content': prompt }],
-        temperature=1.0
+        temperature=1.0                   #生成される回答のクリエイティビティのレベル（1に近づくほど質問に対して様々な回答をする）
         )
     
-    #応答
-    result = response.choices[0].message.content
-    # 以下、eval()はユーザーが任意のコードをプログラムに渡した場合に実行されてしまうため、セキュリティリスクがあるらしい。return resultでもよい？(by羽藤)
-    return eval(result)  # JSON形式の文字列を辞書に変換 
-
+    result = json.loads(response.choices[0].message.content.strip())  #生成されたお題をJSON形式の文字列からPythonの辞書に変換
+    return result 
 
 
 # 画像解析結果をキャッシュする関数
 def get_image_analysis(image_file):
     """Google Cloud Vision APIで画像を分析"""
     # Vision APIクライアントを初期化
-    client = vision.ImageAnnotatorClient(credentials=credentials)
+    client = vision.ImageAnnotatorClient(credentials=credentials)  
 
     # 画像をバイト列に変換
     content = image_file.getvalue()
@@ -86,7 +97,7 @@ def get_image_analysis(image_file):
     return response
 
 
-
+# お題と写真の合致度を点数化し、フィードバックコメントを返す関数
 def score_with_gpt(thema_data, gcv_results):
     """GPT-4で画像の採点とフィードバックを生成"""
     prompt = f"""
@@ -103,9 +114,8 @@ def score_with_gpt(thema_data, gcv_results):
     """
 
     client = OpenAI(api_key=API_KEY)
-
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  #モデルの選択要検討（一旦、安くて性能の高い小さなモデルを採用）(by羽藤)
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "あなたは写真審査の専門家です。"},
             {"role": "user", "content": prompt}
@@ -113,34 +123,40 @@ def score_with_gpt(thema_data, gcv_results):
         response_format={ "type": "json_object" }
     )
     
-    return response.choices[0].message.content
+    return response.choices[0].message.content.strip()
 
 
+#-----------------------------------------------------------------
+#フロントエンドを含むmain関数
+#-----------------------------------------------------------------
 
 def main():
-    # CSSスタイルの追加
+
+    #-----------------------------
+    #CSSスタイルの定義
+    #-----------------------------
     st.markdown(
         """       
         <style>
 
         body {
-            background-color: darkslategray;   /* アプリ全体の背景色を薄い水色（#e0ffff）に設定 */
+            background-color: ivory;   /* アプリ全体の背景色をivoryに設定 */
         }
         [data-testid="stAppViewContainer"] {
-            background-color: darkslategray;   /* Streamlitのメインコンテナの背景色も同じ薄い水色に設定 */
+            background-color: ivory;   /* Streamlitのメインコンテナの背景色も同じivoryに設定 */
         }
         [data-testid="stHeader"] {
             background: rgba(0, 0, 0, 0); /*Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）*/
         }
-       .custom-title {
+        .custom-title {
             font-size: 2.5rem;               /* フォントサイズを2.5倍に */
             font-family: Arial, sans-serif;  /* フォントをArialに、なければsans-serif */
-            color: #e0ffff !important;         /* 文字色を青緑色に */
+            color: peru !important;          /* 文字色をperuに */
             text-align: center;              /* 文字を中央揃えに */
         }
         .custom-subtitle {
-            font-size: 1.5rem;                 /* 標準サイズのフォント */
-            color: #e0ffff !important;       /* 文字色を暗めのグレーに */
+            font-size: 1.5rem;               /* 標準サイズのフォント */
+            color: peru !important;          /* 文字色をperuに */
             text-align: center;              /* 文字を中央揃えに */
             margin-top: -10px;               /* 上の余白を-10px（上の要素に近づける） */
         }
@@ -174,42 +190,104 @@ def main():
         unsafe_allow_html=True
     )
 
+    #--------------------------------------
+    #タイトル、タブの設定とセッションの初期化
+    #--------------------------------------
 
-    # タイトル
-    st.markdown('<h1 class="custom-title">お写んぽアプリ</h1>', unsafe_allow_html=True)
-
-    # 画像のパスを設定
-    image_path = os.path.join("img", "walking_man.png")
+    # アプリのタイトル画像の表示
+    title_image = "./img/title.png"
+    st.image(title_image) 
 
     # タブを作成
-    tab1, tab2, tab3 = st.tabs(["トップ", "使い方", "お問い合わせ"])
-
+    tab1, tab2, tab3, tab4 = st.tabs(["トップ", "使い方", "思い出", "お問い合わせ"])
 
     #セッション状態の初期化
     if "thema_data" not in st.session_state:
         st.session_state.thema_data = None
 
+    #--------------------------------------
+    #トップタブ
+    #--------------------------------------
 
-    # Topタブの内容
     with tab1:
         st.markdown('<h2 class="custom-subtitle">さあ、探しに出かけよう！</h2>', unsafe_allow_html=True)
         st.markdown('<p class="custom-subtitle">あなたが気付いていない新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
 
         # Walking man 画像を表示
+        image_path = os.path.join("img", "walking_man.png") 
         if os.path.exists(image_path):
             st.image(image_path, use_container_width=True)
-
         else:
             st.error("画像が見つかりません。ファイルパスを確認してください。")
 
-        # レベル選択
+
+        #--------------------------------------
+        #データベース
+        #--------------------------------------
+        # データベース接続
+        conn = sqlite3.connect('image_album.db')
+        c = conn.cursor()
+
+        # テーブルの作成（存在しない場合）
+        c.execute('''CREATE TABLE IF NOT EXISTS images
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    data BLOB,
+                    date TEXT)''')
+
+        # テーブルに 'user' カラムがない場合は追加
+        try:
+            c.execute("ALTER TABLE images ADD COLUMN user TEXT")
+        except sqlite3.OperationalError:
+            pass  # 'user' カラムが既に存在している場合はスキップ
+
+
+        #--------------------------------------
+        #ログイン
+        #--------------------------------------
+        # ユーザー認証情報
+        USERS = {
+            "hato": "hato",
+            "fuku": "fuku",
+            "ito": "ito",
+            "kasa": "kasa"
+        }
+
+        # ログイン機能
+        if "authenticated" not in st.session_state:
+            st.session_state["authenticated"] = None
+
+        if not st.session_state["authenticated"]:
+            # ログインフォーム
+            st.markdown('<h2 class="custom-title">ログイン</h2>', unsafe_allow_html=True)
+            username = st.text_input("ユーザー名")
+            password = st.text_input("パスワード", type="password")
+            
+            if st.button("ログイン"):
+                if username in USERS and USERS[username] == password:
+                    st.session_state["authenticated"] = username
+                    st.success(f"やっほー！、{username} さん！")
+                    st.rerun()  # ログイン成功後、再描画
+                else:
+                    st.error("ユーザー名またはパスワードが間違っています")
+            st.stop()  # ログイン前は止めておく
+
+        # ログイン後の処理
+        if st.session_state["authenticated"]:
+            st.markdown(f'<h2 class="custom-subtitle">やっほー！  {st.session_state["authenticated"]}さん！</h2>', unsafe_allow_html=True)
+
+        #--------------------------------------
+        #レベルの選択
+        #--------------------------------------
+        # セレクトボックスからレベルを選択
         level = st.selectbox(
         label="レベルをえらんでね",
-        options= ["レベル1（ちいさな子ども）", "レベル2（しょうがくせい）", "レベル3（中学生以上）"],
+        options= ["レベル1（ちいさなこども）", "レベル2（しょうがくせい）", "レベル3（中学生以上）"],
         help='このアプリを使う人のレベルを選択してください',
         )
 
-
+        #--------------------------------------
+        #お題生成
+        #--------------------------------------
         # ボタンクリックでお題を生成
         if st.button("おだいをGET"):
             with st.spinner("かんがえちゅう…📷"):
@@ -222,17 +300,37 @@ def main():
                 except Exception as e:
                     st.error(f"エラーがはっせい！: {str(e)}")
 
-    
-        # ファイルアップロード
+        #--------------------------------------
+        #写真アップロード
+        #--------------------------------------
+        # ドラッグ＆ドロップで写真をアップロード
         uploaded_file = st.file_uploader("写真をアップロードしてね", type=['jpg', 'jpeg', 'png'])
     
-        if uploaded_file:
+        if uploaded_file is not None:
             # 画像を表示
             image = Image.open(uploaded_file)
-            st.image(image, caption="アップロードした写真", use_container_width=True)
-        
+            buf = io.BytesIO()
+            image.save(buf, format='PNG')
+            image_binary = buf.getvalue()
+            st.image(image, use_container_width=True)
+
+            # 現在の日時を日本時間で取得
+            current_utc_time = datetime.now(pytz.utc)
+            jst = pytz.timezone('Asia/Tokyo')
+            current_jst_time = current_utc_time.astimezone(jst)
+            formatted_jst_time = current_jst_time.strftime("%Y-%m-%d %H:%M")
+
+            # データベースに保存
+            c.execute("INSERT INTO images (user, data, date) VALUES (?, ?, ?)",
+                    (st.session_state["authenticated"], image_binary, current_jst_time))
+            conn.commit()
+            st.success("写真がアップロードされたよ！")
+
+        #--------------------------------------
+        #お題と写真の合致度の判定
+        #--------------------------------------
         # 判定ボタン
-        if st.button("この写真でOK"):
+        if st.button("この写真にきめた！"):
             if st.session_state.thema_data is None:
                 st.error("先に「おだいをGET」ボタンをおしておだいをみてね")
                 return
@@ -242,7 +340,7 @@ def main():
                 gcv_results = get_image_analysis(uploaded_file)
                 
                 # GPTで採点とフィードバック生成
-                result = eval(score_with_gpt(st.session_state.thema_data["Thema"], gcv_results))
+                result = json.loads(score_with_gpt(st.session_state.thema_data["Thema"], gcv_results))
                 
                 # 結果表示
                 score = result['score']
@@ -252,14 +350,18 @@ def main():
                 
                 # スコアに応じて色を変える
                 if score >= 80:
+                    st.balloons()
                     st.success(result['feedback'])
                 elif score >= 60:
                     st.warning(result['feedback'])
                 else:
                     st.error(result['feedback'])
                 
+                #--------------------------------------
+                #画像解析結果の詳細を表示
+                #--------------------------------------
                 # 分析詳細を折りたたみメニューで表示
-                with st.expander("AI分析の詳細"):
+                with st.expander("AIがかくにんしたくわしい写真のないよう"):
                     # ラベルを表示
                     st.write("Labels (ラベル)")
                     labels = gcv_results.label_annotations
@@ -291,12 +393,10 @@ def main():
                     else:
                         st.write("色の情報がありませんでした。")
 
-                    #st.write("検出されたラベル:")
-                    #for label in gcv_results.label_annotations:
-                    #    st.text(f"- {label.description} ({label.score:.2%})")
 
-
-    # 使い方タブの内容
+    #--------------------------------------
+    #使い方タブ
+    #--------------------------------------
     with tab2:
         st.markdown('<p class="custom-bold">使い方</p>', unsafe_allow_html=True)
         st.markdown(
@@ -323,9 +423,34 @@ def main():
             unsafe_allow_html=True
         )
 
-
-    # お問い合わせタブの内容
+    #--------------------------------------
+    #思い出タブ（過去の写真の履歴表示）
+    #--------------------------------------
     with tab3:
+        st.markdown('<p class="custom-bold">おさんぽの思い出</p>', unsafe_allow_html=True)
+        # アルバムの表示
+        def fetch_images(user):
+            c.execute("SELECT data, date FROM images WHERE user = ? ORDER BY date DESC", (user,))
+            return c.fetchall()
+
+        images = fetch_images(st.session_state["authenticated"])
+
+        for img_data, date in images:
+            formatted_date = datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                st.write(f"日付: {formatted_date}")
+            with col2:
+                image = Image.open(io.BytesIO(img_data))
+                st.image(image, use_container_width=True)
+            st.divider()
+
+    conn.close()
+
+    #--------------------------------------
+    #お問い合わせタブタブ
+    #--------------------------------------
+    with tab4:
         st.markdown('<p class="custom-bold">お問い合わせ</p>', unsafe_allow_html=True)
         st.markdown("以下のフォームに記入してください。")
         with st.form("contact_form"):
@@ -339,7 +464,9 @@ def main():
                 else:
                     st.success(f"{name} さん、お問い合わせありがとうございます！")
 
-    # フッター
+    #--------------------------------------
+    #フッター
+    #--------------------------------------
     st.markdown(
         """
         <footer>
