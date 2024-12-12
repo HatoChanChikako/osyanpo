@@ -439,7 +439,7 @@ def main():
             formatted_date = datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M")
             col1, col2 = st.columns([1, 1])
             with col1:
-                st.write(f"日付: {date}")
+                st.write(f"日付: {formatted_date}")
             with col2:
                 image = Image.open(io.BytesIO(img_data))
                 st.image(image, use_container_width=True)
