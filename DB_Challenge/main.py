@@ -434,7 +434,7 @@ def main():
     #思い出タブ（過去の写真の履歴表示）
     #--------------------------------------
     with tab3:
-        st.markdown('<p class="custom-bold">おさんぽの思い出</p>', unsafe_allow_html=True)
+        st.markdown('<p class="custom-bold">お写んぽの思い出</p>', unsafe_allow_html=True)
         # アルバムの表示
         def fetch_images(user):
             c.execute("SELECT data, date FROM images WHERE user = ? ORDER BY date DESC", (user,))
