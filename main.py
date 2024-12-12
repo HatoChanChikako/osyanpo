@@ -124,23 +124,23 @@ def main():
         <style>
 
         body {
-            background-color: darkslategray;   /* アプリ全体の背景色を薄い水色（#e0ffff）に設定 */
+            background-color: ivory;   /* アプリ全体の背景色をivoryに設定 */
         }
         [data-testid="stAppViewContainer"] {
-            background-color: darkslategray;   /* Streamlitのメインコンテナの背景色も同じ薄い水色に設定 */
+            background-color: ivory;   /* Streamlitのメインコンテナの背景色も同じivoryに設定 */
         }
         [data-testid="stHeader"] {
             background: rgba(0, 0, 0, 0); /*Streamlitのヘッダー部分を透明に設定（rgba(0,0,0,0)は完全な透明）*/
         }
-       .custom-title {
+        .custom-title {
             font-size: 2.5rem;               /* フォントサイズを2.5倍に */
             font-family: Arial, sans-serif;  /* フォントをArialに、なければsans-serif */
-            color: #e0ffff !important;         /* 文字色を青緑色に */
+            color: peru !important;         /* 文字色をperuに */
             text-align: center;              /* 文字を中央揃えに */
         }
         .custom-subtitle {
-            font-size: 1.5rem;                 /* 標準サイズのフォント */
-            color: #e0ffff !important;       /* 文字色を暗めのグレーに */
+            font-size: 1.5rem;               /* 標準サイズのフォント */
+            color: peru !important;          /* 文字色をperuに */
             text-align: center;              /* 文字を中央揃えに */
             margin-top: -10px;               /* 上の余白を-10px（上の要素に近づける） */
         }
@@ -175,8 +175,9 @@ def main():
     )
 
 
-    # タイトル
-    st.markdown('<h1 class="custom-title">お写んぽアプリ</h1>', unsafe_allow_html=True)
+    # アプリのタイトル画像の表示
+    title_image = "./img/title.png"
+    st.image(title_image) 
 
     # 画像のパスを設定
     image_path = os.path.join("img", "walking_man.png")
@@ -190,7 +191,7 @@ def main():
         st.session_state.thema_data = None
 
 
-    # Topタブの内容
+    # トップタブの内容
     with tab1:
         st.markdown('<h2 class="custom-subtitle">さあ、探しに出かけよう！</h2>', unsafe_allow_html=True)
         st.markdown('<p class="custom-subtitle">あなたが気付いていない新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
