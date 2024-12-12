@@ -350,8 +350,8 @@ def main():
                 
                 # スコアに応じて色を変える
                 if score >= 80:
+                    st.balloons()
                     st.success(result['feedback'])
-                    st.balloons
                 elif score >= 60:
                     st.warning(result['feedback'])
                 else:
