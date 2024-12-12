@@ -9,6 +9,9 @@ from datetime import datetime
 import json
 import base64
 import io
+import sqlite3
+from datetime import datetime
+import pytz
 
 
 # API設定（羽藤のOpenai API Keyを使用）
@@ -20,7 +23,6 @@ encoded_key = st.secrets["SERVICE_ACCOUNT_KEY"]                                 
 encoded_key = str(encoded_key)[2:-1]                                                      ##不要な最初の2文字と最後の一文字を削除
 original_service_key= json.loads(base64.b64decode(encoded_key).decode('utf-8'))           ##デコーディング
 credentials = service_account.Credentials.from_service_account_info(original_service_key) ##上記original_service_keyをcredentialsという変数に代入
-
 
 
 def topic_generation(level):
@@ -179,16 +181,15 @@ def main():
     title_image = "./img/title.png"
     st.image(title_image) 
 
-    # 画像のパスを設定
-    image_path = os.path.join("img", "walking_man.png")
 
     # タブを作成
-    tab1, tab2, tab3 = st.tabs(["トップ", "使い方", "お問い合わせ"])
+    tab1, tab2, tab3, tab4 = st.tabs(["トップ", "使い方", "思い出", "お問い合わせ"])
 
 
     #セッション状態の初期化
     if "thema_data" not in st.session_state:
         st.session_state.thema_data = None
+
 
 
     # トップタブの内容
@@ -197,19 +198,68 @@ def main():
         st.markdown('<p class="custom-subtitle">あなたが気付いていない新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
 
         # Walking man 画像を表示
+        image_path = os.path.join("img", "walking_man.png") # 画像のパスを設定
         if os.path.exists(image_path):
             st.image(image_path, use_container_width=True)
 
         else:
             st.error("画像が見つかりません。ファイルパスを確認してください。")
 
+        # ユーザー認証情報
+        USERS = {
+            "hato": "hato",
+            "fuku": "fuku",
+            "ito": "ito",
+            "kasa": "kasa"
+        }
+
+        # データベース接続
+        conn = sqlite3.connect('image_album.db')
+        c = conn.cursor()
+
+        # テーブルの作成（存在しない場合）
+        c.execute('''CREATE TABLE IF NOT EXISTS images
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    data BLOB,
+                    date TEXT)''')
+
+        # テーブルに 'user' カラムがない場合は追加
+        try:
+            c.execute("ALTER TABLE images ADD COLUMN user TEXT")
+        except sqlite3.OperationalError:
+            pass  # 'user' カラムが既に存在している場合はスキップ
+
+        # ログイン機能
+        if "authenticated" not in st.session_state:
+            st.session_state["authenticated"] = None
+
+        if not st.session_state["authenticated"]:
+            # ログインフォーム
+            st.markdown('<h2 class="custom-title">ログイン</h2>', unsafe_allow_html=True)
+            username = st.text_input("ユーザー名")
+            password = st.text_input("パスワード", type="password")
+            
+            if st.button("ログイン"):
+                if username in USERS and USERS[username] == password:
+                    st.session_state["authenticated"] = username
+                    st.success(f"やっほー！、{username} さん！")
+                    st.rerun()  # ログイン成功後、再描画
+                else:
+                    st.error("ユーザー名またはパスワードが間違っています")
+            st.stop()  # ログイン前は止めておく
+
+
+        # ログイン後の処理
+        if st.session_state["authenticated"]:
+            #st.markdown(f"現在ログイン中のユーザー: {st.session_state['authenticated']}")
+            st.markdown(f'<h2 class="custom-subtitle">やっほー！  {st.session_state["authenticated"]}さん！</h2>', unsafe_allow_html=True)
+
         # レベル選択
         level = st.selectbox(
         label="レベルをえらんでね",
-        options= ["レベル1（ちいさな子ども）", "レベル2（しょうがくせい）", "レベル3（中学生以上）"],
+        options= ["レベル1（ちいさなこども）", "レベル2（しょうがくせい）", "レベル3（中学生以上）"],
         help='このアプリを使う人のレベルを選択してください',
         )
-
 
         # ボタンクリックでお題を生成
         if st.button("おだいをGET"):
@@ -224,16 +274,31 @@ def main():
                     st.error(f"エラーがはっせい！: {str(e)}")
 
     
-        # ファイルアップロード
+        # 画像アップロード
         uploaded_file = st.file_uploader("写真をアップロードしてね", type=['jpg', 'jpeg', 'png'])
     
-        if uploaded_file:
+        if uploaded_file is not None:
             # 画像を表示
             image = Image.open(uploaded_file)
+            buf = io.BytesIO()
+            image.save(buf, format='PNG')
+            image_binary = buf.getvalue()
             st.image(image, caption="アップロードした写真", use_container_width=True)
-        
+
+            # 現在の日時を取得
+            current_utc_time = datetime.now(pytz.utc)
+            jst = pytz.timezone('Asia/Tokyo')
+            current_jst_time = current_utc_time.astimezone(jst)
+            formatted_jst_time = current_jst_time.strftime("%Y-%m-%d %H:%M")
+
+            # データベースに保存
+            c.execute("INSERT INTO images (user, data, date) VALUES (?, ?, ?)",
+                    (st.session_state["authenticated"], image_binary, current_jst_time))
+            conn.commit()
+            st.success("写真がアップロードされたよ！")
+
         # 判定ボタン
-        if st.button("この写真でOK"):
+        if st.button("この写真にきめた！"):
             if st.session_state.thema_data is None:
                 st.error("先に「おだいをGET」ボタンをおしておだいをみてね")
                 return
@@ -324,9 +389,31 @@ def main():
             unsafe_allow_html=True
         )
 
+    # 思い出タブの内容
+    with tab3:
+        st.markdown('<p class="custom-bold">おさんぽの思い出</p>', unsafe_allow_html=True)
+        # アルバムの表示
+        def fetch_images(user):
+            c.execute("SELECT data, date FROM images WHERE user = ? ORDER BY date DESC", (user,))
+            return c.fetchall()
+
+        images = fetch_images(st.session_state["authenticated"])
+
+        for img_data, date in images:
+            formatted_date = datetime.fromisoformat(date).strftime("%Y-%m-%d %H:%M")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                st.write(f"日付: {date}")
+            with col2:
+                image = Image.open(io.BytesIO(img_data))
+                st.image(image, use_container_width=True)
+            st.divider()
+
+    conn.close()
+
 
     # お問い合わせタブの内容
-    with tab3:
+    with tab4:
         st.markdown('<p class="custom-bold">お問い合わせ</p>', unsafe_allow_html=True)
         st.markdown("以下のフォームに記入してください。")
         with st.form("contact_form"):
