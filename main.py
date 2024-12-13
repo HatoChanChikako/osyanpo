@@ -158,7 +158,7 @@ def main():
             text-align: center;              /* 文字を中央揃えに */
         }
         .custom-subtitle {
-            font-size: 1.5rem;               /* 標準サイズのフォント */
+            font-size: 1.2rem;               /* 標準サイズのフォント */
             color: peru !important;          /* 文字色をperuに */
             text-align: center;              /* 文字を中央揃えに */
             margin-top: -10px;               /* 上の余白を-10px（上の要素に近づける） */
@@ -209,8 +209,8 @@ def main():
     #--------------------------------------
 
     with tab1:
-        st.markdown('<h2 class="custom-subtitle">さあ、探しに出かけよう！</h2>', unsafe_allow_html=True)
-        st.markdown('<p class="custom-subtitle">あなたが気付いていない新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
+        st.markdown('<h2 class="custom-subtitle">さあ、出かけよう！</h2>', unsafe_allow_html=True)
+        st.markdown('<p class="custom-subtitle">新しい発見に出会えるかも？！</p>', unsafe_allow_html=True)
 
         # Walking man 画像を表示
         image_path = os.path.join("img", "walking_man.png") 
