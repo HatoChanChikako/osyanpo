@@ -1,5 +1,0 @@
-streamlit
-google-cloud-vision
-Pillow
-requests
-pytz
