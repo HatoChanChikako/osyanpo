@@ -1,6 +1,7 @@
 #-----------------------------------------------------------------
 #必要なライブラリのインポート
 #-----------------------------------------------------------------
+
 import streamlit as st
 from PIL import Image
 import os
@@ -207,9 +208,11 @@ def main():
     # タブを作成
     tab1, tab2, tab3, tab4 = st.tabs(["トップ", "使い方", "思い出", "お問い合わせ"])
 
+
     #--------------------------------------
     #トップタブ
     #--------------------------------------
+
 
     with tab1:
         st.markdown('<h2 class="custom-subtitle">さあ、出かけよう！</h2>', unsafe_allow_html=True)
@@ -231,7 +234,6 @@ def main():
         c = conn.cursor()
 
         # テーブルの作成（存在しない場合）画像データはBLOB（バイナリデータ）、日付はテキスト型で保存
-
         c.execute('''CREATE TABLE IF NOT EXISTS images
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                     data BLOB,
@@ -244,6 +246,7 @@ def main():
         except sqlite3.OperationalError:
             # 'user' カラムが既に存在している場合はスキップし、処理を継続
             pass  
+
 
         #--------------------------------------
         #ログイン
@@ -320,7 +323,6 @@ def main():
                 except Exception as e:
                     st.error(f"エラーがはっせい！: {str(e)}")
 
-
         # お題の表示（セッションに保存されている場合は常に表示）
         if "thema_data" in st.session_state and st.session_state.thema_data and "Thema" in st.session_state.thema_data:
             st.success(f"きょうのおだい: **{st.session_state.thema_data['Thema']}**")
@@ -369,9 +371,9 @@ def main():
             with st.spinner("AIが写真をかくにんちゅう..."):
                 # Google Cloud Vision APIで写真のバイナリデータを分析
                 gcv_results = get_image_analysis(io.BytesIO(st.session_state["uploaded_image"]))
-         
 
-                # GPTで採点とフィードバック生成し、JSON形式からPythonオブジェクトに変
+                
+                # GPTで採点とフィードバック生成し、JSON形式からPythonオブジェクトに変換
                 result = json.loads(score_with_gpt(st.session_state.thema_data["Thema"], gcv_results))
                 
                 # 結果表示
@@ -414,7 +416,7 @@ def main():
                 # 分析詳細を折りたたみメニューで表示
                 with st.expander("写真のくわしいじょうほう"):
 
-                    # ラベルを表示
+                  # ラベルを表示
                     st.write("Labels (ラベル)")
                     labels = gcv_results.label_annotations
                     if labels:
@@ -513,6 +515,7 @@ def main():
 
             # データベース接続を終了
             conn.close()
+
 
     #--------------------------------------
     #お問い合わせタブタブ
